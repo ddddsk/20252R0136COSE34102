@@ -138,6 +138,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  p->priority = 5;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -202,6 +203,7 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
+  np ->priority = curproc -> priority;
 
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
@@ -542,10 +544,12 @@ setnice(int pid, int nice)
     struct proc *p;
     acquire(&ptable.lock);
 
-    /* ******************** */
-    /* * WRITE YOUR CODE    */
-    /* ******************** */
-
+    for(p =ptable.proc; p< &ptable.proc[NPROC]; p++){
+	    if(pid == p->pid){
+		    p->priority = nice;
+		    release(&ptable.lock);
+		    return 0;}
+    }
     release(&ptable.lock);
     return -1;
 }
@@ -554,11 +558,15 @@ int
 getnice(int pid)
 {
     struct proc *p;
+    
     acquire(&ptable.lock);
     
-    /* ******************** */
-    /* * WRITE YOUR CODE    */
-    /* ******************** */
+    for(p=ptable.proc; p <&ptable.proc[NPROC]; p++){
+	    if(pid == p->pid){
+		    
+		    release(&ptable.lock);
+	            return p->priority;}	    
+    }
 
     release(&ptable.lock);
     return -1;
@@ -578,3 +586,4 @@ ps(void)
     release(&ptable.lock);
     return;
 }
+    

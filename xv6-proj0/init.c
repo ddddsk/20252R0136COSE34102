@@ -21,6 +21,8 @@ main(void)
 
   for(;;){
     printf(1, "init: starting sh\n");
+    printf(1, "ID: 2021320005\n");
+    printf(1, "Name: Seunghwan Oh\n");
     pid = fork();
     if(pid < 0){
       printf(1, "init: fork failed\n");
