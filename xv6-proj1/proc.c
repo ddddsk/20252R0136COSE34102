@@ -579,9 +579,24 @@ ps(void)
     acquire(&ptable.lock);
     cprintf("name\tpid\tppid\tmem\tprio\tstate\n");
 
-    /* ******************** */
-    /* * WRITE YOUR CODE    */
-    /* ******************** */
+    for(p=ptable.proc; p<&ptable.proc[NPROC]; p++){
+	    if(p->state ==RUNNING||p->state ==RUNNABLE||p->state ==SLEEPING){
+		    
+	    	cprintf("%s\t%d\t", p->name,p->pid);
+	    	if(p->parent)
+		    	cprintf("%d\t",p->parent->pid);
+	    	else
+		    	cprintf("-1\t");
+	    	cprintf("%d\t%d\t", p->sz, p->priority);
+		if(p->state==RUNNING)
+			cprintf("RUNNING\n");
+		else if(p->state==RUNNABLE)
+			cprintf("RUNNABLE\n");
+		else if(p->state==SLEEPING)
+			cprintf("SLEEPING\n");
+	    }
+    }		    
+	    
 
     release(&ptable.lock);
     return;
