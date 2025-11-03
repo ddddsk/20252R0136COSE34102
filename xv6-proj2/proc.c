@@ -105,6 +105,8 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
+
+
   acquire(&ptable.lock);
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
@@ -117,6 +119,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->next_proc = 0;
 
   release(&ptable.lock);
 
@@ -254,6 +257,11 @@ fork(void)
   np->state = RUNNABLE;
   ready_queue_in(np);
 
+  if(np->priority<curproc->priority || (np->priority == curproc->priority && np->pid >curproc->pid)){
+    curproc-> state = RUNNABLE;
+    ready_queue_in(curproc);
+    sched();    
+  }
   release(&ptable.lock);
 
   return pid;
@@ -501,11 +509,13 @@ static void
 wakeup1(void *chan)
 {
   struct proc *p;
-
+  
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == SLEEPING && p->chan == chan){
       p->state = RUNNABLE;
       ready_queue_in(p);
+
+      	
     }
   }  
 }
@@ -526,7 +536,7 @@ int
 kill(int pid)
 {
   struct proc *p;
-
+  
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
