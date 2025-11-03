@@ -14,11 +14,39 @@ struct {
 
 static struct proc *initproc;
 
+static struct proc *ready_queue = 0;
+
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+
+static void ready_queue_in(struct proc *p)
+{
+  if (ready_queue ==0){
+    p->next_proc = 0;
+    ready_queue = p;
+    return;
+  }
+  if(p->priority < ready_queue->priority || (p->priority == ready_queue->priority && p->pid > ready_queue->pid)){
+    p-> next_proc = ready_queue;
+    ready_queue =p;
+    return;
+  }
+
+struct proc *now_proc = ready_queue;
+
+while(now_proc-> next_proc){
+  if(p->priority < now_proc ->next_proc->priority)
+    break;
+  if(p->priority == now_proc->next_proc->priority && p->pid > now_proc ->next_proc->pid)
+    break;
+  now_proc = now_proc->next_proc;
+}
+
+p-> next_proc = now_proc -> next_proc;
+now_proc -> next_proc =p;
 
 void
 pinit(void)
