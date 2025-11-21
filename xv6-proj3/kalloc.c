@@ -116,17 +116,23 @@ freemem(void)
 uint
 get_refcount(uint pa)
 {
-  return 0;
+  uint page_index = pa >>PGSHIFT;	
+  return pmem.refcount[page_index];
 }
 
 void
 inc_refcount(uint pa)
 {
+  uint page_index = pa>>PGSHIFT;
+  pmem.refcount[page_index] +=1;	  
   return;
 }
 
 void  
 dec_refcount(uint pa)
 {
+  uint page_index = pa >> PGSHIFT;
+  if (pmem.refcount[page_index]>0)	  
+    pmem.refcount[page_index] -=1;	  
   return;
 }
