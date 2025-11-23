@@ -338,7 +338,7 @@ copyuvm(pde_t *pgdir, uint sz)
 
   lcr3(V2P(pgdir));      
     
-  }
+  
   return d;
 
 bad:
@@ -395,8 +395,52 @@ page_fault(void)
     panic("Invalid access");
     return;
   }
-  
+  struct proc *p; 
+  pte_t *pte;
+  uint pa, flags;
+  int ref_count;
+  char *mem;
+
+  p = myproc();
+  va = PGROUNDDOWN(va);
+
+  if((pte = walkpgdir(p->pgdir, (void*)va, 0)) == 0){
+    p->killed =1;
+    return;
+  }  
+  if(!(*pte & PTE_P)){
+    p->killed=1;
+    return;
+  }  
+
+  pa = PTE_ADDR(*pte);
+  flags = PTE_FLAGS(*pte);
+
+  ref_count = get_refcount(pa);
+
+  if(ref_count > 1){
+    if((mem = kalloc()) == 0)
+      goto bad;
+
+    memmove(mem, (char*)P2V(pa), PGSIZE);
+
+    dec_refcount(pa);
+
+    inc_refcount(V2P(mem));
+
+    flags = flags | PTE_W;
+    *pte  = V2P(mem) | flags;
+  }else{
+    *pte = *pte |PTE_W;
+    
+  }
+
+  lcr3(V2P(p->pgdir));
   return;
+bad:  
+  p->killed = 1;
+  return;  
+  
 }
 
 //PAGEBREAK!

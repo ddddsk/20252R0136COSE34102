@@ -67,9 +67,11 @@ void
 kfree(char *v)
 {
   struct run *r;
+  
 
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
+   
 
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
@@ -124,7 +126,11 @@ void
 inc_refcount(uint pa)
 {
   uint page_index = pa>>PGSHIFT;
-  pmem.refcount[page_index] +=1;	  
+  if(pmem.refcount[page_index] == 0) {
+    pmem.refcount[page_index] = 2;
+  } else {
+    pmem.refcount[page_index] += 1;
+  }
   return;
 }
 
